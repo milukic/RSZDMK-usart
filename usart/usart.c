@@ -3,9 +3,7 @@
 #include <avr/pgmspace.h>
 #include "usart.h"
 
-#define UART_BUFFER_SIZE 64
-
-char Rx_Buffer[UART_BUFFER_SIZE];			//prijemni FIFO bafer
+char Rx_Buffer[USART_RX_BUFFER_SIZE];			//prijemni FIFO bafer
 volatile unsigned char Rx_Buffer_Size = 0;	//broj karaktera u prijemnom baferu
 volatile unsigned char Rx_Buffer_First = 0;
 volatile unsigned char Rx_Buffer_Last = 0;
@@ -13,14 +11,14 @@ volatile unsigned char Rx_Buffer_Last = 0;
 ISR(USART_RX_vect)
 {
 	Rx_Buffer[Rx_Buffer_Last++] = UDR0;		//ucitavanje primljenog karaktera
-	Rx_Buffer_Last &= UART_BUFFER_SIZE - 1;	//povratak na pocetak u slucaju prekoracenja
-	if (Rx_Buffer_Size < UART_BUFFER_SIZE)
+	Rx_Buffer_Last &= USART_RX_BUFFER_SIZE - 1;	//povratak na pocetak u slucaju prekoracenja
+	if (Rx_Buffer_Size < USART_RX_BUFFER_SIZE)
 		Rx_Buffer_Size++;					//inkrement brojaca primljenih karaktera
 }
 
 void usartInit(unsigned long baud)
 {
-	UCSR0A = 0x20;	//inicijalizacija indikatora
+	UCSR0A = 0x00;	//inicijalizacija indikatora
 					//U2Xn = 0: onemogucena dvostruka brzina
 					//MPCMn = 0: onemogucen multiprocesorski rezim
 
@@ -33,9 +31,7 @@ void usartInit(unsigned long baud)
 					//USBSn = 0: koristi se jedan stop bit
 					//UCSzn[2:0] = 011: 8bitni prenos
 
-	unsigned int UBRRn = F_CPU / (16 * baud) - 1;
-	UBRR0H = UBRRn >> 8;
-	UBRR0L = UBRRn & 0xff;
+	UBRR0 = F_CPU / (16 * baud) - 1;
 
 	sei();	//I = 1 (dozvola prekida)
 }
@@ -78,7 +74,7 @@ char usartGetChar()
 	if (!Rx_Buffer_Size)						//bafer je prazan?
 		return -1;
 	c = Rx_Buffer[Rx_Buffer_First++];			//citanje karaktera iz prijemnog bafera
-	Rx_Buffer_First &= UART_BUFFER_SIZE - 1;	//povratak na pocetak u slucaju prekoracenja
+	Rx_Buffer_First &= USART_RX_BUFFER_SIZE - 1;	//povratak na pocetak u slucaju prekoracenja
 	Rx_Buffer_Size--;							//dekrement brojaca karaktera u prijemnom baferu
 
 	return c;

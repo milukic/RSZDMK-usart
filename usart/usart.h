@@ -9,7 +9,7 @@
 #define USART_H_
 
 ///Velicina prijemnog bafera (mora biti 2^n)
-#define UART_BUFFER_SIZE 64
+#define USART_RX_BUFFER_SIZE 64
 
 /**
  * Funkcija inicijalizuje USART modul.
